@@ -151,7 +151,7 @@ void displayTime() {
     if (now.second() == 0) {
       isSecDecay = true;
     } else {
-      analogWrite(secPin, now.second() * (255 / 60));
+      analogWrite(secPin, now.second() * (255.0 / 60.0));
     }
   }
 
@@ -159,7 +159,7 @@ void displayTime() {
     if (now.minute() == 0) {
       isMinDecay = true;
     } else {
-      analogWrite(minPin, now.minute() * (255 / 60));
+      analogWrite(minPin, now.minute() * (255.0 / 60.0));
     }
   }
 
@@ -168,9 +168,9 @@ void displayTime() {
       isHourDecay = true;
     } else {
       if (now.hour() <= 12) {
-        analogWrite(hourPin, now.hour() * (255 / 12));
+        analogWrite(hourPin, now.hour() * (255.0 / 12.0));
       } else {
-        analogWrite(hourPin, (now.hour() - 12) * (255 / 12));
+        analogWrite(hourPin, (now.hour() - 12) * (255.0 / 12.0));
       }
     }
   }
