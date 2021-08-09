@@ -12,10 +12,6 @@ bool isMinDecay = false;
 bool isHourDecay = false;
 int decayPins[] = {secPin, minPin, hourPin}; // order must match isDecayPins in Decay method
 
-bool secDecayHold = true;
-bool minDecayHold = true;
-bool hourDecayHold = true;
-
 const int buttonPin1 = 8;     // the number of the pushbutton pin
 const int buttonPin2 = 7;     // the number of the pushbutton pin
 
@@ -40,16 +36,13 @@ RTC_DS1307 rtc;
 void Decay(int startVal, int endVal, int decayRate, int delayTime) {
   int decay = startVal;
   bool isDecayPins[] = {isSecDecay, isMinDecay, isHourDecay};
-  bool isResets[] = {secDecayHold, minDecayHold, hourDecayHold};
 
   // Loop through the decays
   for (int i = 0; i <= abs(startVal - endVal); i++) {
     // Loop through the pins
     for (int j = 0; j < sizeof decayPins/sizeof decayPins[0]; j++) {
       if (isDecayPins[j]) {
-        if (isResets[j]) {
-          analogWrite(decayPins[j], decay);
-        }
+        analogWrite(decayPins[j], decay);
       }
     }
 
@@ -61,9 +54,9 @@ void Decay(int startVal, int endVal, int decayRate, int delayTime) {
     }
   }
 
-  secDecayHold = false;
-  minDecayHold = false;
-  hourDecayHold = false;
+  isSecDecay = false;
+  isMinDecay = false;
+  isHourDecay = false;
 }
 
 void InitializeButton() {
@@ -86,17 +79,13 @@ void InitializePin() {
   digitalWrite(PMLEDPin, LOW);
   Decay(0, 255,  1, 10);
 
-  secDecayHold = true;
-  minDecayHold = true;
-  hourDecayHold = true;
+  isSecDecay = true;
+  isMinDecay = true;
+  isHourDecay = true;
 
   digitalWrite(AMLEDPin, LOW);
   digitalWrite(PMLEDPin, HIGH);
   Decay(255, 0, -1, 10);
-
-  secDecayHold = false;
-  minDecayHold = false;
-  hourDecayHold = false;
 }
 
 void setup() {
@@ -158,34 +147,31 @@ void displayTime() {
   // Serial.print(":");
   // Serial.println(now.second());
 
-  if (now.second() == 0) {
-    if (secDecayHold == false) {
+  if (isSecDecay == false) {
+    if (now.second() == 0) {
       isSecDecay = true;
-      secDecayHold = true;
-    }
-  } else {
-    analogWrite(secPin, now.second() * (255 / 60));
-  }
-
-  if (now.minute() == 0) {
-    if (minDecayHold == false) {
-      isMinDecay = true;
-      minDecayHold = true;
-    }
-  } else {
-    analogWrite(minPin, now.minute() * (255 / 60));
-  }
-
-  if ((now.hour() + 1) % 12 == 0) {
-    if (hourDecayHold == false) {
-      isHourDecay = true;
-      hourDecayHold = true;
-    }
-  } else {
-    if (now.hour() <= 12) {
-      analogWrite(hourPin, now.hour() * (255 / 12));
     } else {
-      analogWrite(hourPin, (now.hour() - 12) * (255 / 12));
+      analogWrite(secPin, now.second() * (255 / 60));
+    }
+  }
+
+  if (isMinDecay == false) {
+    if (now.minute() == 0) {
+      isMinDecay = true;
+    } else {
+      analogWrite(minPin, now.minute() * (255 / 60));
+    }
+  }
+
+  if (isHourDecay == false) {
+    if ((now.hour() + 1) % 12 == 0) {
+      isHourDecay = true;
+    } else {
+      if (now.hour() <= 12) {
+        analogWrite(hourPin, now.hour() * (255 / 12));
+      } else {
+        analogWrite(hourPin, (now.hour() - 12) * (255 / 12));
+      }
     }
   }
 
