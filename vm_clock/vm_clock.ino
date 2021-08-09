@@ -10,6 +10,7 @@ const int PMLEDPin = 10;
 bool isSecDecay = false;
 bool isMinDecay = false;
 bool isHourDecay = false;
+bool runDelay = false;
 int decayPins[] = {secPin, minPin, hourPin}; // order must match isDecayPins in Decay method
 
 const int buttonPin1 = 8;     // the number of the pushbutton pin
@@ -54,9 +55,6 @@ void Decay(int startVal, int endVal, int decayRate, int delayTime) {
     }
   }
 
-  isSecDecay = false;
-  isMinDecay = false;
-  isHourDecay = false;
 }
 
 void InitializeButton() {
@@ -79,13 +77,13 @@ void InitializePin() {
   digitalWrite(PMLEDPin, LOW);
   Decay(0, 255,  1, 10);
 
-  isSecDecay = true;
-  isMinDecay = true;
-  isHourDecay = true;
-
   digitalWrite(AMLEDPin, LOW);
   digitalWrite(PMLEDPin, HIGH);
   Decay(255, 0, -1, 10);
+
+  isSecDecay = false;
+  isMinDecay = false;
+  isHourDecay = false;
 }
 
 void setup() {
@@ -133,12 +131,9 @@ void buttonLoop() {
 }
 
 void displayTime() {
-  isSecDecay = false;
-  isMinDecay = false;
-  isHourDecay = false;
-
   // Retrieve the time from the real time clock.
   DateTime now = rtc.now();
+  runDelay = false;
 
   // ### For debuging purposes, write the time to the
   // Serial.print(now.hour());
@@ -147,31 +142,37 @@ void displayTime() {
   // Serial.print(":");
   // Serial.println(now.second());
 
-  if (isSecDecay == false) {
-    if (now.second() == 0) {
+  if (now.second() == 0) {
+    if (isSecDecay == false) {
       isSecDecay = true;
-    } else {
-      analogWrite(secPin, now.second() * (255.0 / 60.0));
+      runDelay = true;
     }
+  } else {
+    isSecDecay = false;
+    analogWrite(secPin, now.second() * (255.0 / 60.0));
   }
 
-  if (isMinDecay == false) {
-    if (now.minute() == 0) {
+  if (now.minute() == 0) {
+    if (isMinDecay == false) {
       isMinDecay = true;
-    } else {
-      analogWrite(minPin, now.minute() * (255.0 / 60.0));
+      runDelay = true;
     }
+  } else {
+    isMinDecay = false;
+    analogWrite(minPin, now.minute() * (255.0 / 60.0));
   }
 
-  if (isHourDecay == false) {
-    if ((now.hour() + 1) % 12 == 0) {
+  if (now.hour() % 12 == 1) {
+    if (isHourDecay == false) {
       isHourDecay = true;
+      runDelay = true;
+    }
+  } else {
+    isHourDecay = false;
+    if (now.hour() <= 12) {
+      analogWrite(hourPin, now.hour() * (255.0 / 12.0));
     } else {
-      if (now.hour() <= 12) {
-        analogWrite(hourPin, now.hour() * (255.0 / 12.0));
-      } else {
-        analogWrite(hourPin, (now.hour() - 12) * (255.0 / 12.0));
-      }
+      analogWrite(hourPin, (now.hour() - 12) * (255.0 / 12.0));
     }
   }
 
@@ -183,7 +184,9 @@ void displayTime() {
     digitalWrite(PMLEDPin, HIGH);
   }
 
-  Decay(255, 0, -2, 4);
+  if (runDelay) {
+    Decay(255, 0, -2, 4);
+  }
 }
 
 void loop() {
